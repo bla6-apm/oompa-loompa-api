@@ -1,0 +1,41 @@
+version: '3'
+
+services:
+  #service 1: definition of database
+  db:
+    image: postgres:13.1
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "postgres", "-U", "oompa" ]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=oompa
+      - APP_DB_USER=oompa
+      - APP_DB_PASS=oompa
+      - APP_DB_NAME=oompa
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+    ports:
+      - 5432:5432
+
+  #service 2: definition of spring-boot app
+  oompaLoompa:
+    image: oompa-loompa
+    container_name: oompa-loompa-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/oompa
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    ports:
+      - 8080:8080
+      - 5005:5005
